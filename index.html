@@ -7,6 +7,7 @@
 	<script type="text/javascript" src="d3.crossfilter.ay-histogram.js"></script>
 	
 	<script type="text/javascript">
+  var data = [];
 	var get_data	= function(url)
 	{
 		var dsv = d3.dsv(";", "application/octet-stream");
@@ -18,7 +19,7 @@
 		});
 
 		var rows = dsv.parse(raw);
-		var data = [];
+	  data = [];
 			
 		
 		for(var i in rows)
