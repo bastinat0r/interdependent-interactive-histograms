@@ -3,27 +3,29 @@
 <head>
 	<script type="text/javascript" src="jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="crossfilter.v1.js"></script>
-	<script type="text/javascript" src="d3.v2.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
 	<script type="text/javascript" src="d3.crossfilter.ay-histogram.js"></script>
 	
 	<script type="text/javascript">
-	var get_random_data	= function()
+	var get_data	= function(url)
 	{
-		var data	= [];
+		var dsv = d3.dsv(";", "application/octet-stream");
+		var raw = "";
+		d3.text(url, "application/octet-stream", function(e, t) {
+			raw = t;
+			if(e)
+				console.log(e);
+		});
+
+		var rows = dsv.parse(raw);
+		var data = [];
 			
-		var getRandomInt	= function(min, max)
-		{
-		  return Math.floor(Math.random() * (max - min + 1)) + min;
-		}
 		
-		for(var i = 0; i < 10000; i++)
+		for(var i in rows)
 		{
 			data.push({
-				id: i,
-				date_wide: new Date(2012, getRandomInt(5,9), getRandomInt(1,30), getRandomInt(0,23)),
-				date_narrow: new Date(2012, getRandomInt(8,9), getRandomInt(1,30), getRandomInt(0,23)),
-				a: getRandomInt(0,4999),
-				b: getRandomInt(0,49999)
+				time: new Date((row[0] - 150) * 1000),
+				ticks : row[1]								
 			});
 		}
 		
@@ -31,42 +33,28 @@
 	}
 	
 	$(function(){
-		var filter	= crossfilter(get_random_data());
+		var filter	= crossfilter(get_data("./stats.raw"));
 	
 		var data	=
 		{
-			date_wide:
+			time:
 			{
-				dimension: filter.dimension(function(d){ return d.date_wide; })
+				dimension: filter.dimension(function(d){ return d.time; })
 			},
-			date_narrow:
+			ticks:
 			{
-				dimension: filter.dimension(function(d){ return d.date_narrow; })
-			},
-			a:
-			{
-				dimension: filter.dimension(function(d){ return d.a; })
-			},
-			b:
-			{
-				dimension: filter.dimension(function(d){ return d.b; })
+				dimension: filter.dimension(function(d){ return d.ticks; })
 			}
 		};
 		
-		data.date_wide.group	= data.date_wide.dimension.group(function(d){ return d3.time.day(d); });
-		data.date_narrow.group	= data.date_narrow.dimension.group(function(d){ return d3.time.hour(d); });
-		data.a.group			= data.a.dimension.group(function(d){ return Math.floor(d / 100)*100; });
-		data.b.group			= data.b.dimension.group(function(d){ return Math.floor(d / 1000)*1000; });
+		data.time.group	= data.time.dimension.group(function(d){ return d.time.getTime() });
+		data.ticks.group			= data.ticks.dimension.group(function(d){ return d.ticks; });
 			
-		var date_wide	= ay_histogram('histogram-date-wide', data.date_wide, {margin: [10, 10]});
-		var date_narrow	= ay_histogram('histogram-date-narrow', data.date_narrow, {margin: [10, 10], bin_width: 3600*1000});
-		var a			= ay_histogram('histogram-a', data.a, {margin: [10, 10], bin_width: 100});
-		var b			= ay_histogram('histogram-b', data.b, {margin: [10, 10], bin_width: 1000});
+		var time	= ay_histogram('histogram-time', data.time, {margin: [10, 10]});
+		var ticks			= ay_histogram('histogram-ticks', data.ticks, {margin: [10, 10], bin_width: 1000});
 		
-		date_wide.setRelations([date_narrow,a,b]);
-		date_narrow.setRelations([date_wide,a,b]);
-		a.setRelations([date_wide,date_narrow,b]);
-		b.setRelations([date_wide,date_narrow,a]);
+		time.setRelations([ticks]);
+	  ticks.setRelations([time]);
 	});
 	</script>
 	
@@ -117,18 +105,12 @@
 <body>
 	<div class="graph-container">
 		<div class="column">
-			<svg class="histogram-date-wide"></svg>
+			<svg class="histogram-time"></svg>
 		</div>
 	</div>
 	<div class="graph-container">
-		<div class="column-a">
-			<svg class="histogram-date-narrow"></svg>
-		</div>
-		<div class="column-c">
-			<svg class="histogram-a"></svg>
-		</div>
-		<div class="column-b">
-			<svg class="histogram-b"></svg>
+  	<div class="column">
+			<svg class="ticks"></svg>
 		</div>
 	</div>
 	
