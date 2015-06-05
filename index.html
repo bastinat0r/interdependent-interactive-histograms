@@ -16,27 +16,27 @@
 			raw = t;
 			if(e)
 				console.log(e);
-		});
-
-		var rows = dsv.parse(raw);
-	  data = [];
+			var rows = dsv.parse(raw);
+			data = [];
+				
 			
-		
-		for(var i in rows)
-		{
-			data.push({
-				time: new Date((row[0] - 150) * 1000),
-				ticks : row[1]								
+			for(var i in rows)
+			{
+				data.push({
+					time: new Date((row[0] - 150) * 1000),
+					ticks : row[1]								
+				});
+			}
+			
+			return data;
 			});
-		}
-		
-		return data;
+
 	}
 	
 	$(function(){
 		var filter	= crossfilter(get_data("/stats.raw"));
 	
-		var data	=
+		var datal	=
 		{
 			time:
 			{
@@ -48,11 +48,11 @@
 			}
 		};
 		
-		data.time.group	= data.time.dimension.group(function(d){ return d.time.getTime() });
-		data.ticks.group			= data.ticks.dimension.group(function(d){ return d.ticks; });
+		datal.time.group	= datal.time.dimension.group(function(d){ return d.time.getTime() });
+		datal.ticks.group			= datal.ticks.dimension.group(function(d){ return d.ticks; });
 			
-		var time	= ay_histogram('histogram-time', data.time, {margin: [10, 10]});
-		var ticks			= ay_histogram('histogram-ticks', data.ticks, {margin: [10, 10], bin_width: 1000});
+		var time	= ay_histogram('histogram-time', datal.time, {margin: [10, 10]});
+		var ticks			= ay_histogram('histogram-ticks', datal.ticks, {margin: [10, 10], bin_width: 1000});
 		
 		time.setRelations([ticks]);
 	  ticks.setRelations([time]);
