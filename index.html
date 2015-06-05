@@ -27,6 +27,26 @@
 					ticks : row[1]								
 				});
 			}
+			var datal	=
+			{
+				time:
+				{
+					dimension: filter.dimension(function(d){ return d.time; })
+				},
+				ticks:
+				{
+					dimension: filter.dimension(function(d){ return d.ticks; })
+				}
+			};
+			
+			datal.time.group	= datal.time.dimension.group(function(d){ return d.time.getTime() });
+			datal.ticks.group			= datal.ticks.dimension.group(function(d){ return d.ticks; });
+				
+			var time	= ay_histogram('histogram-time', datal.time, {margin: [10, 10]});
+			var ticks			= ay_histogram('histogram-ticks', datal.ticks, {margin: [10, 10], bin_width: 1000});
+			
+			time.setRelations([ticks]);
+			ticks.setRelations([time]);
 			
 			return data;
 			});
@@ -36,26 +56,6 @@
 	$(function(){
 		var filter	= crossfilter(get_data("/stats.raw"));
 	
-		var datal	=
-		{
-			time:
-			{
-				dimension: filter.dimension(function(d){ return d.time; })
-			},
-			ticks:
-			{
-				dimension: filter.dimension(function(d){ return d.ticks; })
-			}
-		};
-		
-		datal.time.group	= datal.time.dimension.group(function(d){ return d.time.getTime() });
-		datal.ticks.group			= datal.ticks.dimension.group(function(d){ return d.ticks; });
-			
-		var time	= ay_histogram('histogram-time', datal.time, {margin: [10, 10]});
-		var ticks			= ay_histogram('histogram-ticks', datal.ticks, {margin: [10, 10], bin_width: 1000});
-		
-		time.setRelations([ticks]);
-	  ticks.setRelations([time]);
 	});
 	</script>
 	
