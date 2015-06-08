@@ -8,30 +8,41 @@
 	
 	<script type="text/javascript">
   var data = [];
+  var raw = "";
+  var rows = [];
 	var get_data	= function(url)
 	{
 		var dsv = d3.dsv(";", "application/octet-stream");
-		var raw = "";
+		raw = "";
 		d3.text(url, "application/octet-stream", function(e, t) {
 			raw = t;
 			if(e)
 				console.log(e);
-			var rows = dsv.parse(raw);
+			rows = dsv.parseRows(raw);
 			data = [];
 				
-			
-			for(var i in rows)
+			var j = 0;	
+			for(var i=0; i < rows.length; i++)
 			{
-				data.push({
-					time: new Date((row[0] - 150) * 1000),
-					ticks : row[1]								
-				});
+				for(var k=0; k < rows[i][1]; k++) {
+					data.push({
+						id : j,
+						time: new Date((rows[i][0] - 150) * 1000),
+						ticks : parseInt(rows[i][1])
+					});
+					j++;
+				}
 			}
+			var filter	= crossfilter(data);
 			var datal	=
 			{
 				time:
 				{
-					dimension: filter.dimension(function(d){ return d.time; })
+					dimension: filter.dimension(function(d, i){ return d3.time.day(d.time); })
+				},
+				time_narrow:
+				{
+					dimension: filter.dimension(function(d, i){ return d.time.getHours(); })
 				},
 				ticks:
 				{
@@ -39,14 +50,17 @@
 				}
 			};
 			
-			datal.time.group	= datal.time.dimension.group(function(d){ return d.time.getTime() });
-			datal.ticks.group			= datal.ticks.dimension.group(function(d){ return d.ticks; });
+			datal.time.group	= datal.time.dimension.group(function(d){ return d3.time.day(d) });
+			datal.time_narrow.group	= datal.time_narrow.dimension.group(function(d){ return d;});
+			datal.ticks.group	= datal.ticks.dimension.group(function(d){ return d; });
 				
-			var time	= ay_histogram('histogram-time', datal.time, {margin: [10, 10]});
-			var ticks			= ay_histogram('histogram-ticks', datal.ticks, {margin: [10, 10], bin_width: 1000});
+			var time	= ay_histogram('histogram-time', datal.time, {margin: [10, 10]} );
+			var time_narrow	= ay_histogram('histogram-time_narrow', datal.time_narrow, {margin: [10, 10], bin_width: 1 });
+			var ticks	= ay_histogram('histogram-ticks', datal.ticks, {margin: [10, 10], bin_width:1});
 			
-			time.setRelations([ticks]);
-			ticks.setRelations([time]);
+			time.setRelations([time_narrow, ticks]);
+			time_narrow.setRelations([time, ticks]);
+			ticks.setRelations([time,time_narrow]);
 			
 			return data;
 			});
@@ -54,7 +68,7 @@
 	}
 	
 	$(function(){
-		var filter	= crossfilter(get_data("/stats.raw"));
+		get_data("/stats.raw");
 	
 	});
 	</script>
@@ -107,16 +121,19 @@
 	<div class="graph-container">
 		<div class="column">
 			<svg class="histogram-time"></svg>
+			<p> Day </p>
 		</div>
 	</div>
 	<div class="graph-container">
-  	<div class="column">
-			<svg class="ticks"></svg>
+		<div class="column-a">
+			<svg class="histogram-time_narrow"></svg>
+			<p> Time of Day (Hour)</p>
+		</div>
+		<div class="column-b">
+			<svg class="histogram-ticks"></svg>
+			<p> Ticks per 300s </p>
 		</div>
 	</div>
 	
-	<div class="authorship">
-		This is a demo of the <a href="https://github.com/gajus/interdependent-interactive-histograms" target="_blank">histogram plugin</a>.
-	</div>
 </body>
 </html>
